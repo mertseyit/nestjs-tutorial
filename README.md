@@ -1,99 +1,437 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Tutorial
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Bu repo NestJs için çıkarmış olduğum notları ve örnek kodları barındırır. Basic yapıları anlamak ve kullanmak için roadmap niteliği taşımaktadır. Aşağıda yer alan notlar için https://www.youtube.com/@SakuraDev youtube kanalından yardım aldım.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## NestJS Nedir?
 
-## Description
+NestJS, `Node.js` üzerine inşa edilmiş, `TypeScript` destekli bir `backend framework`'tür. Modüler yapısı ve `dependency injection` desteği ile test edilebilir, ölçeklenebilir ve bakımı kolay uygulamalar geliştirilmesini sağlar. NestJS, hem `Object-Oriented Programming (OOP)` hem de `Functional Programming (FP)` paradigmalarını destekler.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## NestJS'in Mantığı ve Yapısı
 
-## Project setup
+NestJS, `Angular`'dan esinlenmiştir ve bu nedenle benzer bir modüler yapıya sahiptir. Controller, Service, Module ve Provider gibi kavramlar NestJS'in temel yapı taşlarıdır:
 
-```bash
-$ npm install
+- Controller: İstekleri yönetir ve doğru servislere yönlendirir. API uç noktalarının tanımlandığı yerdir.
+
+- Service: İş mantığını barındırır ve veritabanı ya da diğer harici kaynaklarla iletişim kurar.
+
+- Module: Belirli bir işleve sahip olan ve ilgili bileşenleri gruplandıran yapılardır. Her uygulamanın en az bir AppModule'ü bulunur.
+
+- Provider: Uygulama genelinde kullanılabilir hizmetlerdir ve Dependency Injection (DI) ile bağlanır.
+
+## 1. Controller Tanımı
+
+Controller'lar endpoint'leri yönettiğimiz kısımdır. Örnek bir Controller tanımı:
+
+```js
+
+@Controller('user')
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get('hello')
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+
 ```
 
-## Compile and run the project
+Yukarıdaki örnekte istek yolu şu şekildedir: http://localhost:3000/user/hello
 
-```bash
-# development
-$ npm run start
+## 2. İlk Controller Örneği
 
-# watch mode
-$ npm run start:dev
+Buradaki örneğimizde bir product için controller tanımı yapılacak. Örnek şu endpoint'leri içeriyor:
 
-# production mode
-$ npm run start:prod
+- GET - product/all
+- GET - product/:id
+- POST - product/:id
+- PUT - product/:id
+- DELETE - prodcut/:id
+
+Yapmamız gereken öncelikle bir module oluşturmak. Her uygulama en az bir module içerir. Bir modul oluşturmak için nestjs'in CLI'ı kullanılabilir. Aşağıdaki kod bir tane product modul'ü oluşturur:
+
+`nest g module product`
+
+![alt text](./images/1.png)
+
+Bu işlen sonucunda konsolda şu çıktıları alırız:
+
+```c
+CREATE src/product/product.module.ts (88 bytes)
+UPDATE src/app.module.ts (330 bytes)
 ```
 
-## Run tests
+app.module.ts dosyamızda şu değişikliğin olduğunu görebiliriz:
 
-```bash
-# unit tests
-$ npm run test
+```js
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ProductModule } from './product/product.module';
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+@Module({
+  imports: [ProductModule], //modüllerimiz
+  controllers: [AppController], // contorller'larımız
+  providers: [AppService], // servislerimiz
+})
+export class AppModule {}
 ```
 
-## Deployment
+Şimdi de bir tane product için controller oluşturalım. Bunun için yine nestjs CLI kullanabiliriz. Aşağıdaki kod product için product klasörü altına contorller oluşturur.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+`nest g controller product`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+![alt text](./images/2.png)
 
-```bash
-$ npm install -g mau
-$ mau deploy
+Controller CRUD işlemleri için endpoint'leri yazdığımız kısımdır.
+
+İlk request endpoint'imizi yazalım:
+
+```js
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('product')
+export class ProductController {
+  @Get('all')
+  findAll() {
+    return 'All Products Returned';
+  }
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+`/product/all` endpointine istek atılırsa ekranda return edilen mesaj yazar. Veri tabanından veri çekme işlemleri, ekleme, silme gibi işlemler için farklı metotlar ve fonksiyoneliteler tanımlanabilir.
 
-## Resources
+### Route Parameters
 
-Check out a few resources that may come in handy when working with NestJS:
+Silme, güncelleme veya bulma işlemleri için istek urlinde paramtere olarak bazı verileri sunucuya gönderebiliriz. Örneğin;
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```js
+@Controller('product')
+export class ProductController {
+  @Get('all')
+  findAll() {
+    //the database
+    return 'All Products Returned';
+  }
 
-## Support
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return `One Product Returned. Product ID: ${id}`;
+  }
+}
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```
 
-## Stay in touch
+Örnekte id paramteresini kullandık. Eğer bu endpoint'e istek giderse ekranda return edilen mesaj yazacaktır: `product/2`, `product/13`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Birden fazla paramtre kullanmak istersek de şu şekilde yazmamız yeterli olacaktır:
 
-## License
+```js
+@Controller('product')
+export class ProductController {
+  @Get('all')
+  findAll() {
+    //the database
+    return 'All Products Returned';
+  }
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+  @Get(':id/:ref')
+  findOne(@Param('id') id: string, @Param('ref') ref:string) {
+    return `One Product Returned. Product ID: ${id} and Refernce: ${ref}`;
+  }
+}
+```
+
+Aynı mantıkta: `product/3/453323`, `product/4/277477`.
+
+### Request Body
+
+Frontend tarafından sunucuya veri gönderilmek istenirse bu verilere request'in `body` değerinde erişilir. Örneğin istemci tarafından gönderin bir JSON nesnesine nasıl erişildiğine bakalım:
+
+```json
+{
+  "name": "Product Name",
+  "price": 12345
+}
+```
+
+Sunucu tarafı şu şekilde tanımlanmalı:
+
+```js
+
+@Controller('product')
+export class ProductController {
+  @Get('all')
+  findAll() {
+    //the database
+    return 'All Products Returned';
+  }
+
+  @Get(':id/:slug')
+  findOne(@Param('id') id: string, @Param('slug') slug: string) {
+    return `One Product Returned. Product ID: ${id}, Other Parameter: ${slug}`;
+  }
+
+  @Post('create')
+  createProduct(@Body() body) {
+    return body;
+  }
+}
+
+```
+
+Eğer `product/create` endpoint'ine istek atılırsa body nesnesini dönecektir.
+
+## Validators
+
+İstemci tarafından gelecek olan veriler için (body, request, params gibi) sunucu tarafında güvenlik önlemleri almak gerekebilir. Type checking veya leng controll gibi özellikler sayesinde güvenli işlemler gerçekleşir. Bu işlem için Nestjs'de validator özellikleri vardır.
+
+Aşağıdaki örnekleri inceleyelim:
+
+### Params Validator
+
+Örneğimizde id değerinin type değerini konsola yazdıracak olarak params değerinin daima string yazdıracaktır. Fakat id değerimiz daima number dönsün isteyebiliriz. Bunun için `Parser` kullanılabilir:
+
+```js
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: string) {
+    return `One Product Returned. Product ID: ${id}`;
+  }
+```
+
+Eğer `/product/12` endpoint'ine istek atılırsa return edilen değeri görürüz. Ancak `/product/jkj` gibi bir endpoint'e istek atarsak response olarka aşağıdaki error mesajını alırız:
+
+```json
+{
+  "message": "Validation failed (numeric string is expected)",
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+Aynı işlemi query için yapacak olursak:
+
+```js
+  @Get(':id/')
+  findOne(@Param('id', ParseIntPipe) id, @Query('sort', ParseBoolPipe) sort) {
+    return `One Product Returned. Product ID: ${id} and sort: ${sort}`;
+  }
+```
+
+Hatalı bir sorgu örneği : `/product/jkj?sort=543`
+
+### Class Validation
+
+İstemciden alacağımız body nesnesi için de validation yazabiliriz. Bunun için öncelikle `product` klasörü altında bir dto adında bir klasör oluşturalım oluşturalım. DTO, verilerin ağ üzerinden nasıl gönderileceğini tanımlayan bir nesnedir (Nestjs Documantation). DTO kasörü altında tanımlayacağımız dosyalar basit TypeSript şemalarıdır (class değerleri de denebilir). dto klasörü altında `productDto.dto.ts` adında bir dosya oluşturalım ve aşağıdaki örneği oluşturalım:
+
+```js
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+
+export class CreateProductDto {
+  name: string;
+  price: number;
+  isSelled: boolean;
+}
+```
+
+Tek başına değerlerin type değerlerini kullanmak yetmez. Yapmak istediğimiz şey şu:
+
+Eğer istemci tarafından bu veri şemasına uyan türde veri gönderilmez ise response olarak bir hata fırlatmak. Bu hataları tanımlamak için projemize aşağıdaki iki kütüphaneyi indirebiliriz:
+
+`npm i class-validator class-transformer`
+
+class-validator kütüphanesi class seviyesinde validation işlemi yapmamızı sağlıyor. productDto.dto.ts dosyamızı aşağıdaki kod ile değiştirelim:
+
+```js
+  import { IsBoolean, IsNumber, IsString } from 'class-validator';
+
+  export class CreateProductDto {
+    @IsString()
+    name: string;
+    @IsInt()
+    price: number;
+    @IsBoolean()
+    isSelled: boolean;
+  }
+```
+
+name değerimiz daima string, price değerimiz daima number ve isSelled değerimiz daima boolean olmalı.
+
+Daha sonra product.controller.ts dosyamızda da bazı değişiklikler yapmamız gerekiyor:
+
+Örneğimizi şu şekilde kurguladık:
+Kullanıcı bir ürün eklemek isterse `/product/create` endpoint'ine POST isteği atmalı:
+
+```js
+  import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    ParseBoolPipe,
+    ParseIntPipe,
+    Post,
+    Query,
+    UsePipes,
+    ValidationPipe,
+  } from '@nestjs/common';
+
+  import { CreateProductDto } from './dto/createProduct.dto';
+  @Post('create')
+  @UsePipes(new ValidationPipe())
+  createProduct(@Body() body: CreateProductDto) {
+    return body;
+  }
+```
+
+UsePipes ile custom bir ValidationPipe oluşturuyoruz. Daha sonra body nesnesinin türünü product.dto.ts içerisinde oluşturmuş olduğumuz CreateProductDto class değeri ile eşliyoruz.
+Aşağıdaki örnek üzerinden bir istek atarsak alacağımız hata response değerini görelim:
+
+örnek body nesnesi:
+
+```json
+{
+  "name": 3979,
+  "price": "12344",
+  "isSelled": "false33",
+  "tst": false
+}
+```
+
+hata mesajı:
+
+```json
+{
+  "message": [
+    "property tst should not exist",
+    "name must be a string",
+    "price must be a number conforming to the specified constraints",
+    "isSelled must be a boolean value"
+  ],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+Görüldüğü üzere artık body için bir validation tanımalamsı yapmış olduk. Fakat örnek body'de `tst:false` olarak tanımlı bir satır olmasına rağmen hata mesajında buna dair bir ibare yok. Bunun sebebi default olarak tanımladığımız validator bu satırı görmezden gelir. Fakat bu TypeScript mantığına aykıdırıd. Bunun için yapmamız gereken controller kodunu şu şekilde güncellemektir:
+
+```js
+  import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    ParseBoolPipe,
+    ParseIntPipe,
+    Post,
+    Query,
+    UsePipes,
+    ValidationPipe,
+  } from '@nestjs/common';
+
+  import { CreateProductDto } from './dto/createProduct.dto';
+  @Post('create')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  createProduct(@Body() body: CreateProductDto) {
+    return body;
+  }
+```
+
+`whitelist: true`: Bu sadece product.dto.ts dosyasında tanımladığımız türde verileri kabul eder ve işler. Onun dışında gönderilmiş olan verileri görmezden gelir, hata mesajı dönmez.
+
+`forbidNonWhitelisted: true`: whitelist ile birlikte kullanılır ve product.dto.ts içerisinde tanımlı olmayan türde bir veri gönderilmesi durumunda hata mesajı gönderir:
+
+```json
+{
+  "message": ["property tst should not exist"],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+UsePipe kullanmak yerine validation tanımı `@Body` içerisinde de yapılabilir:
+
+```js
+...
+
+@Post('create')
+  createProduct(
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    body: CreateProductDto,
+  ) {
+    return body;
+  }
+
+...
+```
+
+Daha detaylı validation işlemleri için validation tanımlamalarını şu şekilde ayarlamak mümkün:
+
+```js
+import { IsBoolean, IsInt, IsPositive, IsString } from 'class-validator';
+
+export class CreateProductDto {
+  @IsString({ message: 'name must be string (custom message)' })
+  name: string;
+  @IsInt({ message: 'price must be number (custom message)' })
+  @IsPositive({ message: 'price must be positive' })
+  price: number;
+  @IsBoolean()
+  isSelled: boolean;
+}
+
+```
+
+validation içerisinde custom message tanımlamak da mümkündür. Eğer default error message'lar kullanılmak istenmez ise buraya custom message'lar da yazılabilir.
+
+### Global and Model Level Validation
+
+Validation tanımalamasını tüm endpoint'ler için kullanılabilir kılmanın yolu her body içerisinde `new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })` tanımlamasını kullanarak gerçekleştirilebilir. Fakat bunun yerine global olarak bu tanımlamayı yapabiliriz.
+`main.ts` dosyasında bu tanımlama yapılabilir:
+
+```js
+
+```
+
+Eğer her modele özgü bir validation tanımlamak istersek de (örneğin product route için) `product.module.ts` dosyasında validation tanımlaması yapabiliriz. main.ts dosyasında tanımladığımız validation işlemi tüm endpoint'ler için geçerlidir. Fakat model'de tanımladığımız validation işlemleri sadece o modelde tanımlı endpoint için geçerlidir. Tanımlala işlemi şu şekilde yapılabilir:
+
+```js
+import { Module, ValidationPipe } from '@nestjs/common';
+import { ProductController } from './product.controller';
+import { APP_PIPE } from '@nestjs/core';
+
+@Module({
+  controllers: [ProductController],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    },
+  ],
+})
+export class ProductModule {}
+```
+
+Eğer ValidationPipe için bir property tanımlamak istiyorsan yukarıdaki gibi `useValue` kullanman gerekiyor. Burada whiteList ve forbidNonWhiteListed gibi ayarlamaları kullanmak mümkün. Fakat bu ayarlamları yapmadan kullanmak istiyorusan da `useClass` kullanabilirsin:
+
+```js
+import { Module, ValidationPipe } from '@nestjs/common';
+import { ProductController } from './product.controller';
+import { APP_PIPE } from '@nestjs/core';
+
+@Module({
+  controllers: [ProductController],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
+    },
+  ],
+})
+export class ProductModule {}
+```
+
+### Custom Validation for Params and Query

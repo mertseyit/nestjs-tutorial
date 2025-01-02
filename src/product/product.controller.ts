@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseBoolPipe,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { CreateProductDto } from './dto/createProduct.dto';
 
 @Controller('product')
 export class ProductController {
@@ -8,13 +18,16 @@ export class ProductController {
     return 'All Products Returned';
   }
 
-  @Get(':id/:slug')
-  findOne(@Param('id') id: string, @Param('slug') slug: string) {
-    return `One Product Returned. Product ID: ${id}, Other Parameter: ${slug}`;
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id, @Query('sort', ParseBoolPipe) sort) {
+    return `One Product Returned. Product ID: ${id} and sort: ${sort}`;
   }
 
   @Post('create')
-  createProduct(@Body() body) {
+  createProduct(
+    @Body()
+    body: CreateProductDto,
+  ) {
     return body;
   }
 }
