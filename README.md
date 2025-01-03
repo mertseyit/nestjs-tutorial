@@ -435,3 +435,116 @@ export class ProductModule {}
 ```
 
 ### Custom Validation for Params and Query
+
+Body için tanımladığımız validation özelliklerini params ve search query için de tanımlayabilirz. `dto` klasörü altında idParamDto.dto.ts adında bir dosya oluşturalım. Burada class validation ayarlamalarını yapacağız:
+
+```ts
+import { IsInt, IsPositive } from 'class-validator';
+
+export class IdParamDTO {
+  @IsInt({ message: 'id must be integer number' })
+  @IsPositive({ message: 'id must be positive' })
+  id: number;
+}
+```
+
+Daha sonra örneğin findOne için kullanmış olduğumuz `id` params'ına bu validation değerini tanımlayalım:
+
+```ts
+  @Get(':id')
+  findOne(@Param('id') id: IdParamDTO) {
+    return `One Product Returned. Product ID: ${id}`;
+  }
+```
+
+Eğer `/product/23` yoluna istek atarsak çıktı olarak şu değeri alacağızdır:
+
+```json
+{
+  "message": ["id must be positive", "id must be integer number"],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+Hata almamızın nedeni URL değerinden gelen params değerinin string type değerinde olmasıdır. Bunu console.log(type id) ile test edebilirsiniz. Bu hatanın gitmesi için `product.module` dosyasında belirli ayarlamaları yapmamız gerekmektedir:
+
+```js
+import { Module, ValidationPipe } from '@nestjs/common';
+import { ProductController } from './product.controller';
+import { APP_PIPE } from '@nestjs/core';
+
+@Module({
+  controllers: [ProductController],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    },
+  ],
+})
+export class ProductModule {}
+```
+
+`product.module.ts` dosyasının görünümü yukarıdaki gibidir. Burada iki tane ayarlama ekledik:
+
+`transform:true`: Bu ayar transform (dönüşüm) yapmasını sağlar. URL'den gelen paramtre ve query değerlerinin transform edildiğini varsayar.
+
+`enableImplicitConversion: true`: string olan bir ilkel görürse (boolean veya sayı gibi) @Type(() => Number) veya @Type(() => Boolean) kullanılmamış olsa bile bunun yerine ilkel tür olması gerektiğini varsaymasını ve dönüştürmesini söyleyecektir. (stackoverflow)
+
+Bu ayarlamayı yaptıktan sonra halen daha aynı hatayı aldığımı farkettim. Bu hatayı da contorller içerisindeki id tanımlamasını şu şekilde yaptıktan sonra çözdüm:
+
+```ts
+  @Get(':id')
+  findOne(@Param() params: IdParamDTO) {
+    return params.id;
+  }
+```
+
+Burada `@Param()` içinde önceki gibi `'id'` tanımlamasını kaldırdım. Eğer koyarsam halen daha hata almaya devam ettim. Eğer sadece id üzerinden almak istersem tanımalayı destructure edebilirim:
+
+```ts
+  @Get(':id')
+  findOne(@Param() { id }: IdParamDTO) {
+    return params.id;
+  }
+```
+
+### Access Headers
+
+NestJs'de request'in `Headers` 'ına erişmek için aşağıdaki kodu kullanman yeterli olacaktır:
+
+```ts
+  @Get(':id')
+  findOne(@Param() params: IdParamDTO, @Headers() headers) {
+    return headers;
+  }
+
+```
+
+Return edilen değer:
+
+```json
+{
+  "user-agent": "Apidog/1.0.0 (https://apidog.com)",
+  "accept": "*/*",
+  "host": "localhost:3000",
+  "accept-encoding": "gzip, deflate, br",
+  "connection": "keep-alive"
+}
+```
+
+Olacaktır.
+
+### Headers Validation
+
+Daha sonra yazılacak...
+
+### Dependency Injection ()

@@ -1,14 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseBoolPipe,
-  ParseIntPipe,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { CreateProductDto } from './dto/createProduct.dto';
+import { IdParamDTO } from './dto/idParamDto.dto';
 
 @Controller('product')
 export class ProductController {
@@ -19,8 +11,8 @@ export class ProductController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id, @Query('sort', ParseBoolPipe) sort) {
-    return `One Product Returned. Product ID: ${id} and sort: ${sort}`;
+  findOne(@Param() params: IdParamDTO, @Headers() headers) {
+    return headers;
   }
 
   @Post('create')
